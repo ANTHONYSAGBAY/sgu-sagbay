@@ -19,7 +19,7 @@ export class TeacherService {
 
     try {
       const [data, total] = await Promise.all([
-        this.prisma.userReference.findMany({
+        this.prisma.user.findMany({
           where: { roleId: 2 }, // 2 = TEACHER
           skip,
           take: limit,
@@ -33,7 +33,7 @@ export class TeacherService {
             }
           }
         }),
-        this.prisma.userReference.count({ where: { roleId: 2 } })
+        this.prisma.user.count({ where: { roleId: 2 } })
       ]);
 
       return {
@@ -50,7 +50,7 @@ export class TeacherService {
 
   async findOne(id: number) {
     try {
-      const user = await this.prisma.userReference.findUnique({
+      const user = await this.prisma.user.findUnique({
         where: { id },
         include: {
           teacherProfile: {
@@ -79,7 +79,7 @@ export class TeacherService {
 
   async update(id: number, updateTeacherDto: UpdateTeacherDto) {
     try {
-      const user = await this.prisma.userReference.findUnique({
+      const user = await this.prisma.user.findUnique({
         where: { id }
       });
 
@@ -100,7 +100,7 @@ export class TeacherService {
       };
 
       // Update user and profile
-      return await this.prisma.userReference.update({
+      return await this.prisma.user.update({
         where: { id },
         data: {
           ...userUpdateData,
@@ -131,9 +131,59 @@ export class TeacherService {
     }
   }
 
+  async findBusyTeachers() {
+    try {
+      // Listar docentes que imparten más de una asignatura
+      return await this.prisma.teacherProfile.findMany({
+        where: {
+          subjects: {
+            some: {} // At least one
+          }
+        },
+        include: {
+          user: true,
+          _count: {
+            select: { subjects: true }
+          }
+        }
+      }).then(teachers => teachers.filter(t => t._count.subjects > 1));
+    } catch (error) {
+      throw new InternalServerErrorException('Error fetching busy teachers');
+    }
+  }
+
+  async filterAdvanced() {
+    try {
+      // Docentes: Tiempo completo AND (Dictan asignaturas OR NOT Inactivos)
+      return await this.prisma.teacherProfile.findMany({
+        where: {
+          AND: [
+            { type: 'FULL_TIME' },
+            {
+              OR: [
+                { subjects: { some: {} } },
+                { NOT: { user: { status: 'inactive' } } }
+              ]
+            }
+          ]
+        },
+        include: {
+          user: true,
+          subjects: {
+            include: {
+              subject: true
+            }
+          }
+        }
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Error in advanced teacher filter');
+    }
+  }
+
   async remove(id: number) {
     try {
-      const user = await this.prisma.userReference.findUnique({
+      const user = await this.prisma.user.findUnique({
         where: { id }
       });
 
@@ -142,7 +192,7 @@ export class TeacherService {
       }
 
       // Delete will cascade to teacherProfile due to the schema configuration
-      await this.prisma.userReference.delete({
+      await this.prisma.user.delete({
         where: { id }
       });
 

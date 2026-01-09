@@ -100,6 +100,17 @@ export class SubjectService {
     }
   }
 
+  async findByCareer(careerId: number) {
+    try {
+      return await this.prisma.subject.findMany({
+        where: { careerId },
+        include: this.subjectIncludes
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Error fetching subjects by career');
+    }
+  }
+
   async remove(id: number) {
     try {
       const existingSubject = await this.prisma.subject.findUnique({
