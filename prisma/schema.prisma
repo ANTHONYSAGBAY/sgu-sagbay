@@ -1,0 +1,165 @@
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique // ADMIN, TEACHER, STUDENT
+  users User[]
+
+  @@map("role")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String?
+  age       Int?
+  roleId    Int      @default(3) @map("role_id") // 3 = STUDENT por defecto
+  status    String   @default("active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  role      Role     @relation(fields: [roleId], references: [id])
+
+  teacherProfile TeacherProfile?
+  studentProfile StudentProfile?
+
+  @@index([roleId])
+  @@index([email])
+  @@map("user")
+}
+
+model Cycle {
+  id            Int       @id @default(autoincrement())
+  name          String    // Ej: "2024-1", "2024-2", "2025-1"
+  year          Int
+  period        Int       // 1 o 2 (semestre)
+  startDate     DateTime  @map("start_date")
+  endDate       DateTime  @map("end_date")
+  isActive      Boolean   @default(false) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  subjects      Subject[]
+
+  @@unique([year, period])
+  @@map("cycle")
+}
+
+model Speciality {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  teacherProfiles TeacherProfile[]
+
+  @@map("speciality")
+}
+
+model Career {
+  id            Int       @id @default(autoincrement())
+  name          String    @unique
+  totalCicles   Int       @map("total_cicles")
+  durationYears Int       @map("duration_years")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  
+  subjects      Subject[]
+  teacherProfiles TeacherProfile[]
+  studentProfiles StudentProfile[]
+
+  @@map("career")
+}
+
+model Subject {
+  id          Int      @id @default(autoincrement())
+  name        String
+  careerId    Int      @map("career_id")
+  cicleNumber Int      @map("cicle_number")
+  cycleId     Int?     @map("cycle_id") // Referencia al ciclo académico
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  capacity    Int      @default(30)
+  
+  career      Career   @relation(fields: [careerId], references: [id])
+  cycle       Cycle?   @relation(fields: [cycleId], references: [id])
+
+  subjectAssignments SubjectAssignment[]
+  studentSubjects    StudentSubject[]
+
+  @@unique([careerId, cicleNumber, name])
+  @@index([careerId, cicleNumber])
+  @@index([cycleId])
+  @@map("subject")
+}
+
+model TeacherProfile {
+  id           Int                  @id @default(autoincrement())
+  userId       Int                  @unique @map("user_id")
+  specialityId Int                  @map("speciality_id")
+  careerId     Int                  @map("career_id")
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
+  type         String               @default("FULL_TIME") // FULL_TIME, PART_TIME
+  
+  user         User                 @relation(fields: [userId], references: [id])
+  speciality   Speciality           @relation(fields: [specialityId], references: [id])
+  career       Career               @relation(fields: [careerId], references: [id])
+  subjects     SubjectAssignment[]
+
+  @@map("teacher_profile")
+}
+
+model StudentProfile {
+  id              Int              @id @default(autoincrement())
+  userId          Int              @unique @map("user_id")
+  careerId        Int              @map("career_id")
+  currentCicle    Int              @map("current_cicle")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  
+  user            User             @relation(fields: [userId], references: [id])
+  career          Career           @relation(fields: [careerId], references: [id])
+  studentSubjects StudentSubject[]
+
+  @@index([careerId, currentCicle])
+  @@map("student_profile")
+}
+
+model SubjectAssignment {
+  id               Int              @id @default(autoincrement())
+  teacherProfileId Int              @map("teacher_profile_id")
+  subjectId        Int              @map("subject_id")
+  assignedAt       DateTime         @default(now()) @map("assigned_at")
+  
+  teacherProfile   TeacherProfile   @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  subject          Subject          @relation(fields: [subjectId], references: [id])
+
+  @@unique([teacherProfileId, subjectId])
+  @@map("subject_assignment")
+}
+
+model StudentSubject {
+  id               Int              @id @default(autoincrement())
+  studentProfileId Int              @map("student_profile_id")
+  subjectId        Int              @map("subject_id")
+  grade            Decimal?         @db.Decimal(5, 2)
+  status           String           @default("enrolled")
+  enrolledAt       DateTime         @default(now()) @map("enrolled_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  
+  studentProfile   StudentProfile   @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  subject          Subject          @relation(fields: [subjectId], references: [id])
+
+  @@unique([studentProfileId, subjectId])
+  @@map("student_subject")
+}

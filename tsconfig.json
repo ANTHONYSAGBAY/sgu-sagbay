@@ -15,14 +15,8 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "prisma/generated/client-users": [
-        "./prisma/generated/client-users"
-      ],
-      "prisma/generated/client-academic": [
-        "./prisma/generated/client-academic"
-      ],
-      "prisma/generated/client-profiles": [
-        "./prisma/generated/client-profiles"
+      "@/*": [
+        "src/*"
       ]
     },
     "incremental": true,
