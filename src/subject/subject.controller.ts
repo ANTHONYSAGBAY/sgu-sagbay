@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
 import { SubjectService } from './subject.service';
 import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateSubjectDto } from './dto/update-subject.dto';
@@ -20,6 +20,12 @@ export class SubjectController {
   @Get()
   findAll(@Query() findWithPagination: PaginationDto) {
     return this.subjectService.findAll(findWithPagination);
+  }
+
+  @ApiOperation({ summary: 'Get subjects by career' })
+  @Get('career/:careerId')
+  findByCareer(@Param('careerId', ParseIntPipe) careerId: number) {
+    return this.subjectService.findByCareer(careerId);
   }
 
   @ApiOperation({ summary: 'Get a subject by ID' })

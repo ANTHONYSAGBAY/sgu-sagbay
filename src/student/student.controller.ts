@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Delete, Query, Body } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Delete, Query, Body, ParseIntPipe } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { PaginationDto } from 'src/pagination/pagination.dto';
@@ -13,6 +13,36 @@ export class StudentController {
   @Get()
   findAll(@Query() findWithPagination: PaginationDto) {
     return this.studentService.findAll(findWithPagination);
+  }
+
+  @ApiOperation({ summary: 'Get active students with their careers' })
+  @Get('active-with-career')
+  findActiveWithCareer() {
+    return this.studentService.findActiveWithCareer();
+  }
+
+  @ApiOperation({ summary: 'Get enrollment report (Native Query)' })
+  @Get('report')
+  getReport() {
+    return this.studentService.getEnrollmentReport();
+  }
+
+  @ApiOperation({ summary: 'Advanced student search' })
+  @Get('search-advanced')
+  searchAdvanced(
+    @Query('careerId', ParseIntPipe) careerId: number,
+    @Query('cycleId', ParseIntPipe) cycleId: number,
+  ) {
+    return this.studentService.searchAdvanced(careerId, cycleId);
+  }
+
+  @ApiOperation({ summary: 'Get student enrollments by cycle' })
+  @Get(':id/enrollments/:cycleId')
+  findEnrollments(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('cycleId', ParseIntPipe) cycleId: number,
+  ) {
+    return this.studentService.findEnrollments(id, cycleId);
   }
 
   @ApiOperation({ summary: 'Get a student by ID' })
