@@ -1,0 +1,257 @@
+{
+    "info": {
+        "_postman_id": "8d3e9c5f-7a4b-4b1e-9e8c-5a6b7c8d9e0f",
+        "name": "SGU - Gestión Universitaria",
+        "description": "Colección completa para la Actividad Práctica - CLASE 3 y el sistema general.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Register Student",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Juan Perez\",\n    \"email\": \"juan@perez.com\",\n    \"password\": \"123456\",\n    \"phone\": \"999888777\",\n    \"age\": 20,\n    \"careerId\": 1,\n    \"currentCicle\": 1\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/register/student",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register",
+                                "student"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Actividad Clase 3 - Parte 1: Consultas Derivadas",
+            "item": [
+                {
+                    "name": "1. Estudiantes Activos con Carrera",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/student/active-with-career",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student",
+                                "active-with-career"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2. Materias de una Carrera",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/subject/career/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "subject",
+                                "career",
+                                "1"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "3. Docentes con >1 Asignatura",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/teacher/busy",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "teacher",
+                                "busy"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "4. Matrículas de Estudiante por Período",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/student/1/enrollments/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student",
+                                "1",
+                                "enrollments",
+                                "1"
+                            ],
+                            "description": "Format: /student/:id/enrollments/:cycleId"
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Actividad Clase 3 - Parte 2: Operaciones Lógicas",
+            "item": [
+                {
+                    "name": "1. Búsqueda Avanzada Estudiantes (AND)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/student/search-advanced?careerId=1&cycleId=1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student",
+                                "search-advanced"
+                            ],
+                            "query": [
+                                {
+                                    "key": "careerId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "cycleId",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2. Filtro Docentes (FULL_TIME AND (Dictan OR NOT Inactivos))",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/teacher/filter-advanced",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "teacher",
+                                "filter-advanced"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Actividad Clase 3 - Parte 3: Consulta Nativa",
+            "item": [
+                {
+                    "name": "Reporte de Matrículas (SQL Raw)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/student/report",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student",
+                                "report"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Actividad Clase 3 - Parte 4: Transacción ACID",
+            "item": [
+                {
+                    "name": "Matriculación de Estudiante",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/enrollment/1/10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "enrollment",
+                                "1",
+                                "10"
+                            ],
+                            "description": "Formato: /enrollment/:studentId/:subjectId"
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000",
+            "type": "string"
+        }
+    ]
+}

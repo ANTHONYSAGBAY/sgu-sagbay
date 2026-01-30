@@ -5,10 +5,11 @@ import { PrismaProfilesService } from 'src/prisma/prisma-profiles.service';
 export class EnrollmentService {
     constructor(private readonly prisma: PrismaProfilesService) { }
 
+    // Esta es la consulta de la Parte 4: Proceso de matriculación bajo transacción (ACID)
     async enrollStudent(studentId: number, subjectId: number) {
         return await this.prisma.$transaction(async (tx) => {
             // 1. Verificar que el estudiante esté activo
-            const user = await tx.user.findUnique({
+            const user = await tx.userReference.findUnique({
                 where: { id: studentId },
                 include: { studentProfile: true },
             });
@@ -18,7 +19,7 @@ export class EnrollmentService {
             }
 
             // 2. Verificar disponibilidad de cupos en la asignatura
-            const subject = await tx.subject.findUnique({
+            const subject = await tx.subjectReference.findUnique({
                 where: { id: subjectId },
             });
 
@@ -40,7 +41,7 @@ export class EnrollmentService {
             });
 
             // 4. Descontar el cupo disponible
-            await tx.subject.update({
+            await tx.subjectReference.update({
                 where: { id: subject.id },
                 data: {
                     capacity: subject.capacity - 1,

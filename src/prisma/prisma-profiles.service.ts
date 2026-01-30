@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client-profiles';
 import { Pool } from 'pg';
 
 @Injectable()
@@ -8,6 +8,7 @@ export class PrismaProfilesService extends PrismaClient implements OnModuleInit,
   constructor() {
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL_PROFILES,
+      ssl: true,
     });
 
     const adapter = new PrismaPg(pool);

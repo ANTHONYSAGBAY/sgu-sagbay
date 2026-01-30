@@ -100,6 +100,7 @@ export class SubjectService {
     }
   }
 
+  // Esta es la consulta de la Parte 1: Obtener las materias asociadas a una carrera específica
   async findByCareer(careerId: number) {
     try {
       return await this.prisma.subject.findMany({

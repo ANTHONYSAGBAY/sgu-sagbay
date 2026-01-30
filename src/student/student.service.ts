@@ -14,7 +14,7 @@ export class StudentService {
 
     try {
       const [data, total] = await Promise.all([
-        this.prisma.user.findMany({
+        this.prisma.userReference.findMany({
           where: { roleId: 3 }, // 3 = STUDENT
           skip,
           take: limit,
@@ -22,16 +22,12 @@ export class StudentService {
             studentProfile: {
               include: {
                 career: true,
-                studentSubjects: {
-                  include: {
-                    subject: true
-                  }
-                }
+                studentSubjects: true
               }
             }
           }
         }),
-        this.prisma.user.count({ where: { roleId: 3 } })
+        this.prisma.userReference.count({ where: { roleId: 3 } })
       ]);
 
       return {
@@ -42,13 +38,14 @@ export class StudentService {
       };
 
     } catch (error) {
-      throw new InternalServerErrorException('Error fetching students');
+      console.error('Error in StudentService.findAll:', error);
+      throw new InternalServerErrorException('Error fetching students: ' + (error.message || 'Unknown error'));
     }
   }
 
   async findOne(id: number) {
     try {
-      const user = await this.prisma.user.findUnique({
+      const user = await this.prisma.userReference.findUnique({
         where: { id },
         include: {
           studentProfile: {
@@ -80,7 +77,7 @@ export class StudentService {
 
   async update(id: number, updateStudentDto: UpdateStudentDto) {
     try {
-      const user = await this.prisma.user.findUnique({
+      const user = await this.prisma.userReference.findUnique({
         where: { id }
       });
 
@@ -102,7 +99,7 @@ export class StudentService {
       };
 
       // Update user and profile
-      return await this.prisma.user.update({
+      return await this.prisma.userReference.update({
         where: { id },
         data: {
           ...userUpdateData,
@@ -136,9 +133,10 @@ export class StudentService {
     }
   }
 
+  // Esta es la consulta de la Parte 1: Listar todos los estudiantes activos junto con su carrera
   async findActiveWithCareer() {
     try {
-      return await this.prisma.user.findMany({
+      return await this.prisma.userReference.findMany({
         where: {
           roleId: 3, // STUDENT
           status: 'active'
@@ -146,16 +144,19 @@ export class StudentService {
         include: {
           studentProfile: {
             include: {
-              career: true
+              career: true,
+              studentSubjects: true
             }
           }
         }
       });
     } catch (error) {
+      console.error('Error in StudentService.findActiveWithCareer:', error);
       throw new InternalServerErrorException('Error fetching active students with career');
     }
   }
 
+  // Esta es la consulta de la Parte 1: Mostrar las matrículas de un estudiante en un período académico determinado
   async findEnrollments(studentId: number, cycleId: number) {
     try {
       return await this.prisma.studentSubject.findMany({
@@ -164,7 +165,7 @@ export class StudentService {
             userId: studentId
           },
           subject: {
-            cycleId: cycleId
+            id: cycleId
           }
         },
         include: {
@@ -176,6 +177,7 @@ export class StudentService {
     }
   }
 
+  // Esta es la consulta de la Parte 3: Consulta nativa SQL para el reporte de materias
   async getEnrollmentReport() {
     try {
       // Consulta SQL nativa: Nombre Estudiante, Carrera, Total Materias
@@ -184,9 +186,9 @@ export class StudentService {
           u.name as student_name,
           c.name as career_name,
           COUNT(ss.id) as total_subjects
-        FROM "user" u
+        FROM "user_reference" u
         JOIN student_profile sp ON u.id = sp.user_id
-        JOIN career c ON sp.career_id = c.id
+        JOIN career_reference c ON sp.career_id = c.id
         LEFT JOIN student_subject ss ON sp.id = ss.student_profile_id
         GROUP BY u.name, c.name
         ORDER BY total_subjects DESC
@@ -196,6 +198,7 @@ export class StudentService {
     }
   }
 
+  // Esta es la consulta de la Parte 2: Operación lógica para buscar estudiantes activos, por carrera y período
   async searchAdvanced(careerId: number, cycleId: number) {
     try {
       // Búsqueda compleja: Estudiantes Activos AND Carrera AND Período
@@ -208,7 +211,7 @@ export class StudentService {
               studentSubjects: {
                 some: {
                   subject: {
-                    cycleId: cycleId
+                    id: cycleId
                   }
                 }
               }
@@ -221,7 +224,7 @@ export class StudentService {
           studentSubjects: {
             where: {
               subject: {
-                cycleId: cycleId
+                id: cycleId
               }
             },
             include: {
@@ -237,7 +240,7 @@ export class StudentService {
 
   async remove(id: number) {
     try {
-      const user = await this.prisma.user.findUnique({
+      const user = await this.prisma.userReference.findUnique({
         where: { id }
       });
 
@@ -246,7 +249,7 @@ export class StudentService {
       }
 
       // Delete will cascade to studentProfile due to the schema configuration
-      await this.prisma.user.delete({
+      await this.prisma.userReference.delete({
         where: { id }
       });
 

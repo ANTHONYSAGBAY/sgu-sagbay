@@ -6,12 +6,14 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL_USERS")
 }
 
 model Role {
   id    Int    @id @default(autoincrement())
   name  String @unique // ADMIN, TEACHER, STUDENT
   users User[]
+  userSyncs UserSync[]
 
   @@map("role")
 }
@@ -44,6 +46,8 @@ model UserSync {
   hasStudentProfile Boolean  @default(false) @map("has_student_profile")
   syncedAt          DateTime @default(now()) @map("synced_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
+
+  role              Role     @relation(fields: [roleId], references: [id])
 
   @@map("user_sync")
 }

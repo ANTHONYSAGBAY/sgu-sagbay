@@ -19,7 +19,7 @@ export class TeacherService {
 
     try {
       const [data, total] = await Promise.all([
-        this.prisma.user.findMany({
+        this.prisma.userReference.findMany({
           where: { roleId: 2 }, // 2 = TEACHER
           skip,
           take: limit,
@@ -33,7 +33,7 @@ export class TeacherService {
             }
           }
         }),
-        this.prisma.user.count({ where: { roleId: 2 } })
+        this.prisma.userReference.count({ where: { roleId: 2 } })
       ]);
 
       return {
@@ -50,7 +50,7 @@ export class TeacherService {
 
   async findOne(id: number) {
     try {
-      const user = await this.prisma.user.findUnique({
+      const user = await this.prisma.userReference.findUnique({
         where: { id },
         include: {
           teacherProfile: {
@@ -79,7 +79,7 @@ export class TeacherService {
 
   async update(id: number, updateTeacherDto: UpdateTeacherDto) {
     try {
-      const user = await this.prisma.user.findUnique({
+      const user = await this.prisma.userReference.findUnique({
         where: { id }
       });
 
@@ -100,7 +100,7 @@ export class TeacherService {
       };
 
       // Update user and profile
-      return await this.prisma.user.update({
+      return await this.prisma.userReference.update({
         where: { id },
         data: {
           ...userUpdateData,
@@ -131,6 +131,7 @@ export class TeacherService {
     }
   }
 
+  // Esta es la consulta de la Parte 1: Listar los docentes que imparten más de una asignatura
   async findBusyTeachers() {
     try {
       // Listar docentes que imparten más de una asignatura
@@ -152,6 +153,7 @@ export class TeacherService {
     }
   }
 
+  // Esta es la consulta de la Parte 2: Filtrar docentes por tiempo completo y otras condiciones lógicas
   async filterAdvanced() {
     try {
       // Docentes: Tiempo completo AND (Dictan asignaturas OR NOT Inactivos)
@@ -183,7 +185,7 @@ export class TeacherService {
 
   async remove(id: number) {
     try {
-      const user = await this.prisma.user.findUnique({
+      const user = await this.prisma.userReference.findUnique({
         where: { id }
       });
 
@@ -192,7 +194,7 @@ export class TeacherService {
       }
 
       // Delete will cascade to teacherProfile due to the schema configuration
-      await this.prisma.user.delete({
+      await this.prisma.userReference.delete({
         where: { id }
       });
 

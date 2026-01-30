@@ -27,26 +27,65 @@ export class AuthService {
 
 	async registerStudent(registerStudentDto: RegisterStudentDto) {
 		try {
+			// 1. Asegurar que el rol existe (Self-healing)
+			await this.prisma.role.upsert({
+				where: { id: 3 },
+				update: {},
+				create: { id: 3, name: 'STUDENT' }
+			});
+
 			const hashedPassword = bcrypt.hashSync(registerStudentDto.password, 10);
 
-			const user = await this.prisma.user.create({
-				data: {
+			// 2. Upsert del usuario en la DB de Users
+			const user = await this.prisma.user.upsert({
+				where: { email: registerStudentDto.email },
+				update: {}, // Si existe, no hacemos nada por ahora
+				create: {
 					name: registerStudentDto.name,
 					email: registerStudentDto.email,
 					password: hashedPassword,
-					phone: registerStudentDto.phone,
-					age: registerStudentDto.age,
-					roleId: 3, // 3 = STUDENT
+					phone: registerStudentDto.phone || null,
+					age: registerStudentDto.age || null,
+					role: { connect: { id: 3 } }, // 3 = STUDENT
+					status: 'active'
 				}
 			});
 
-			// Create UserReference and StudentProfile in profiles DB
-			await this.prismaProfiles.userReference.create({
-				data: {
+			// 3. Crear el registro de sincronización
+			await this.prisma.userSync.upsert({
+				where: { userId: user.id },
+				update: {},
+				create: {
+					userId: user.id,
+					role: { connect: { id: 3 } }, // STUDENT
+					hasStudentProfile: true
+				}
+			});
+
+			// 4. Asegurar que la carrera existe en la DB de Profiles
+			await this.prismaProfiles.careerReference.upsert({
+				where: { id: registerStudentDto.careerId },
+				update: {},
+				create: {
+					id: registerStudentDto.careerId,
+					name: 'Carrera ' + registerStudentDto.careerId,
+					totalCicles: 10
+				}
+			});
+
+			// 5. Upsert de la referencia del usuario y el perfil de estudiante en Profiles
+			await this.prismaProfiles.userReference.upsert({
+				where: { id: user.id },
+				update: {
+					name: user.name,
+					email: user.email,
+					status: user.status
+				},
+				create: {
 					id: user.id,
 					name: user.name,
 					email: user.email,
-					roleId: user.roleId,
+					roleId: 3, // STUDENT
 					status: user.status,
 					studentProfile: {
 						create: {
@@ -57,36 +96,78 @@ export class AuthService {
 				}
 			});
 
-			// Remove password from response
+			// Limpiar respuesta
 			const { password, ...userWithoutPassword } = user;
 			return userWithoutPassword;
 		} catch (error) {
+			console.error('Error en registerStudent:', error);
 			this.handleDBErrors(error);
 		}
 	}
 
 	async registerTeacher(registerTeacherDto: RegisterTeacherDto) {
 		try {
+			// Ensure role exists
+			await this.prisma.role.upsert({
+				where: { id: 2 },
+				update: {},
+				create: { id: 2, name: 'TEACHER' }
+			});
+
 			const hashedPassword = bcrypt.hashSync(registerTeacherDto.password, 10);
 
-			const user = await this.prisma.user.create({
-				data: {
+			// Upsert user in Users DB
+			const user = await this.prisma.user.upsert({
+				where: { email: registerTeacherDto.email },
+				update: {},
+				create: {
 					name: registerTeacherDto.name,
 					email: registerTeacherDto.email,
 					password: hashedPassword,
-					phone: registerTeacherDto.phone,
-					age: registerTeacherDto.age,
-					roleId: 2, // 2 = TEACHER
+					phone: registerTeacherDto.phone || null,
+					age: registerTeacherDto.age || null,
+					role: { connect: { id: 2 } }, // 2 = TEACHER
+					status: 'active'
 				}
 			});
 
-			// Create UserReference and TeacherProfile in profiles DB
-			await this.prismaProfiles.userReference.create({
-				data: {
+			// Create UserSync record
+			await this.prisma.userSync.upsert({
+				where: { userId: user.id },
+				update: {},
+				create: {
+					userId: user.id,
+					role: { connect: { id: 2 } }, // TEACHER
+					hasTeacherProfile: true
+				}
+			});
+
+			// Ensure career and speciality references exist
+			await this.prismaProfiles.careerReference.upsert({
+				where: { id: registerTeacherDto.careerId },
+				update: {},
+				create: { id: registerTeacherDto.careerId, name: 'Carrera ' + registerTeacherDto.careerId, totalCicles: 10 }
+			});
+
+			await this.prismaProfiles.specialityReference.upsert({
+				where: { id: registerTeacherDto.specialityId },
+				update: {},
+				create: { id: registerTeacherDto.specialityId, name: 'Especialidad ' + registerTeacherDto.specialityId }
+			});
+
+			// Upsert UserReference and TeacherProfile in profiles DB
+			await this.prismaProfiles.userReference.upsert({
+				where: { id: user.id },
+				update: {
+					name: user.name,
+					email: user.email,
+					status: user.status
+				},
+				create: {
 					id: user.id,
 					name: user.name,
 					email: user.email,
-					roleId: user.roleId,
+					roleId: 2, // TEACHER
 					status: user.status,
 					teacherProfile: {
 						create: {
@@ -101,6 +182,7 @@ export class AuthService {
 			const { password, ...userWithoutPassword } = user;
 			return userWithoutPassword;
 		} catch (error) {
+			console.error('Error en registerTeacher:', error);
 			this.handleDBErrors(error);
 		}
 	}
@@ -172,11 +254,13 @@ export class AuthService {
 			throw error;
 		}
 	}
-	private handleDBErrors(error): never {
-		if (error.code === "P2002") throw new ConflictException("Data already exists"); // Generic conflict message, or tailor it
+	private handleDBErrors(error: any): never {
+		console.error('--- FULL DATABASE ERROR ---');
+		console.error(error);
 
-		console.log(error);
+		if (error.code === "P2002")
+			throw new ConflictException(error.detail || "Record already exists");
 
-		throw new InternalServerErrorException("Please check server logs");
+		throw new InternalServerErrorException(error.message || "Please check server logs");
 	}
 }
