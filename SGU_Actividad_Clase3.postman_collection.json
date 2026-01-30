@@ -1,0 +1,189 @@
+{
+    "info": {
+        "_postman_id": "8d3e9c5f-7a4b-4b1e-9e8c-5a6b7c8d9e0f",
+        "name": "SGU - Actividad Clase 3 (COMPLETA)",
+        "description": "Colección completa para probar todas las partes de la tarea de Gestión Universitaria.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Parte 1: Consultas Derivadas",
+            "item": [
+                {
+                    "name": "1.1 Estudiantes Activos con Carrera",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/student/active-with-career",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student",
+                                "active-with-career"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "1.2 Materias de una Carrera (ID 1)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/subject/career/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "subject",
+                                "career",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "1.3 Docentes con más de una materia",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/teacher/busy",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "teacher",
+                                "busy"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "1.4 Matrículas por Estudiante y Período",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/student/1/enrollments/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student",
+                                "1",
+                                "enrollments",
+                                "1"
+                            ],
+                            "description": "/student/:studentId/enrollments/:cycleId"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Parte 2: Operaciones Lógicas",
+            "item": [
+                {
+                    "name": "2.1 Búsqueda Avanzada Estudiantes (AND)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/student/search-advanced?careerId=1&cycleId=1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student",
+                                "search-advanced"
+                            ],
+                            "query": [
+                                {
+                                    "key": "careerId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "cycleId",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2.2 Filtro Docentes (AND, OR, NOT)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/teacher/filter-advanced",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "teacher",
+                                "filter-advanced"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Parte 3: Consulta Nativa SQL",
+            "item": [
+                {
+                    "name": "Reporte de Matrículas (SQL Raw)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/student/report",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student",
+                                "report"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Parte 4: Operación Transaccional (ACID)",
+            "item": [
+                {
+                    "name": "Proceso de Matrícula (Transacción)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/enrollment/1/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "enrollment",
+                                "1",
+                                "1"
+                            ],
+                            "description": "/enrollment/:studentId/:subjectId"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000",
+            "type": "string"
+        }
+    ]
+}

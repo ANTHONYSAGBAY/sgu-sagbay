@@ -135,21 +135,28 @@ export class TeacherService {
   async findBusyTeachers() {
     try {
       // Listar docentes que imparten más de una asignatura
-      return await this.prisma.teacherProfile.findMany({
-        where: {
-          subjects: {
-            some: {} // At least one
-          }
-        },
+      const teachers = await this.prisma.teacherProfile.findMany({
         include: {
           user: true,
-          _count: {
-            select: { subjects: true }
+          speciality: true,
+          career: true,
+          subjects: {
+            include: {
+              subject: true
+            }
           }
         }
-      }).then(teachers => teachers.filter(t => t._count.subjects > 1));
+      });
+
+      // Filter teachers who have more than one subject
+      return teachers.filter(teacher => teacher.subjects.length > 1);
     } catch (error) {
-      throw new InternalServerErrorException('Error fetching busy teachers');
+      console.error('=== Error in findBusyTeachers ===');
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      console.error('Full error:', JSON.stringify(error, null, 2));
+      console.error('Stack:', error.stack);
+      throw new InternalServerErrorException(`Error fetching busy teachers: ${error.message}`);
     }
   }
 

@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL_PROFILES")
 }
 
 model UserReference {
@@ -53,11 +52,13 @@ model SubjectReference {
   careerId        Int                 @map("career_id")
   cicleNumber     Int                 @map("cicle_number")
   capacity        Int                 @default(30)
+  cycleId         Int?                @map("cycle_id")
   syncedAt        DateTime            @default(now()) @map("synced_at")
   subjectAssignments SubjectAssignment[]
   studentSubjects StudentSubject[]
 
   @@index([careerId, cicleNumber])
+  @@index([cycleId])
   @@map("subject_reference")
 }
 
